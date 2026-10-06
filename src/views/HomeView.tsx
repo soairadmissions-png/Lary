@@ -2,41 +2,116 @@ import React, { useState, useMemo } from 'react';
 import { ArrowRight } from 'lucide-react';
 import { useShop } from '../context/ShopContext';
 import { ProductCard } from '../components/ProductCard';
-import { BridalPartySetsSection } from '../components/BridalPartySetsSection';
 import { PersonalisedRobesFeature } from '../components/PersonalisedRobesFeature';
 import heroBrideImg from '../assets/images/regenerated_image_1788952915584.png';
 import { CANONICAL_DEFAULTS, handleImageError } from '../constants/imageDefaults';
 
-type ProductTab = 'all' | 'bridal' | 'bridesmaids';
+type ProductTab =
+  | 'all'
+  | 'bridal'
+  | 'bridesmaids'
+  | 'sets'
+  | 'adire'
+  | 'pyjamas'
+  | 'junior';
+
+const normalizeCategory = (cat?: string): string => {
+  if (!cat) return '';
+  return cat.trim().toLowerCase().replace(/[_\s-]+/g, ' ');
+};
 
 const isBridalRobes = (cat?: string): boolean => {
-  if (!cat) return false;
-  const c = cat.trim().toLowerCase();
-  if (
-    c === 'bridal' ||
-    c === 'bridal robes' ||
-    c === 'bridal-robes' ||
-    c === 'bridal robe' ||
-    c === 'bridal-robe'
-  ) {
+  const norm = normalizeCategory(cat);
+  if (!norm) return false;
+  if (norm === 'bridal' || norm === 'bridal robes' || norm === 'bridal robe') {
     return true;
   }
-  return c.includes('bridal') && !c.includes('bridesmaid') && !c.includes('party');
+  return (
+    norm.includes('bridal') &&
+    !norm.includes('bridesmaid') &&
+    !norm.includes('party') &&
+    !norm.includes('pyjama') &&
+    !norm.includes('pajama')
+  );
 };
 
 const isBridesmaids = (cat?: string): boolean => {
-  if (!cat) return false;
-  const c = cat.trim().toLowerCase();
+  const norm = normalizeCategory(cat);
+  if (!norm) return false;
   if (
-    c === 'bridesmaids' ||
-    c === 'bridesmaids robes' ||
-    c === 'bridesmaids-robes' ||
-    c === 'bridesmaid' ||
-    c === 'bridesmaid robes'
+    norm === 'bridesmaids' ||
+    norm === 'bridesmaid' ||
+    norm === 'bridesmaids robes' ||
+    norm === 'bridesmaid robes'
   ) {
     return true;
   }
-  return c.includes('bridesmaid');
+  return norm.includes('bridesmaid');
+};
+
+const isBridalPartySets = (cat?: string): boolean => {
+  const norm = normalizeCategory(cat);
+  if (!norm) return false;
+  if (
+    norm === 'sets' ||
+    norm === 'set' ||
+    norm === 'bridal party sets' ||
+    norm === 'bridal party set' ||
+    norm === 'party sets' ||
+    norm === 'party set'
+  ) {
+    return true;
+  }
+  return (
+    (norm.includes('party') && norm.includes('set')) ||
+    (norm.includes('bridal') && norm.includes('set'))
+  );
+};
+
+const isAdire = (cat?: string): boolean => {
+  const norm = normalizeCategory(cat);
+  if (!norm) return false;
+  if (
+    norm === 'adire' ||
+    norm === 'african heritage' ||
+    norm === 'rich african heritage' ||
+    norm === 'adire artistry'
+  ) {
+    return true;
+  }
+  return norm.includes('adire') || norm.includes('heritage');
+};
+
+const isPyjamas = (cat?: string): boolean => {
+  const norm = normalizeCategory(cat);
+  if (!norm) return false;
+  if (
+    norm === 'pyjamas' ||
+    norm === 'pyjama' ||
+    norm === 'bridal pyjamas' ||
+    norm === 'pajamas' ||
+    norm === 'pajama'
+  ) {
+    return true;
+  }
+  return norm.includes('pyjama') || norm.includes('pajama') || norm.includes('pj');
+};
+
+const isJuniorRobes = (cat?: string): boolean => {
+  const norm = normalizeCategory(cat);
+  if (!norm) return false;
+  if (
+    norm === 'junior' ||
+    norm === 'junior robes' ||
+    norm === 'junior robe' ||
+    norm === 'junior & kids robes' ||
+    norm === 'junior and kids robes' ||
+    norm === 'kids robes' ||
+    norm === 'kids robe'
+  ) {
+    return true;
+  }
+  return norm.includes('junior') || norm.includes('kids');
 };
 
 export const HomeView: React.FC = () => {
@@ -48,20 +123,44 @@ export const HomeView: React.FC = () => {
     return products.filter((p) => p.status !== 'draft' && p.status !== 'archived');
   }, [products]);
 
-  // Tab definitions and counts
+  // Tab definitions and counts for all 7 required tabs
   const tabs = useMemo(() => {
-    const allCount = publishedProducts.length;
-    const bridalCount = publishedProducts.filter((p) => isBridalRobes(p.category)).length;
-    const bridesmaidsCount = publishedProducts.filter((p) => isBridesmaids(p.category)).length;
-
     return [
-      { id: 'all' as ProductTab, label: 'ALL', count: allCount },
-      { id: 'bridal' as ProductTab, label: 'BRIDAL ROBES', count: bridalCount },
-      { id: 'bridesmaids' as ProductTab, label: 'BRIDESMAIDS', count: bridesmaidsCount },
+      { id: 'all' as ProductTab, label: 'ALL', count: publishedProducts.length },
+      {
+        id: 'bridal' as ProductTab,
+        label: 'BRIDAL ROBES',
+        count: publishedProducts.filter((p) => isBridalRobes(p.category)).length,
+      },
+      {
+        id: 'bridesmaids' as ProductTab,
+        label: 'BRIDESMAIDS',
+        count: publishedProducts.filter((p) => isBridesmaids(p.category)).length,
+      },
+      {
+        id: 'sets' as ProductTab,
+        label: 'BRIDAL PARTY SETS',
+        count: publishedProducts.filter((p) => isBridalPartySets(p.category)).length,
+      },
+      {
+        id: 'adire' as ProductTab,
+        label: 'ADIRE',
+        count: publishedProducts.filter((p) => isAdire(p.category)).length,
+      },
+      {
+        id: 'pyjamas' as ProductTab,
+        label: 'PYJAMAS',
+        count: publishedProducts.filter((p) => isPyjamas(p.category)).length,
+      },
+      {
+        id: 'junior' as ProductTab,
+        label: 'JUNIOR ROBES',
+        count: publishedProducts.filter((p) => isJuniorRobes(p.category)).length,
+      },
     ];
   }, [publishedProducts]);
 
-  // Filtered products for active tab
+  // Dynamically filtered products for the active tab
   const displayedProducts = useMemo(() => {
     if (activeTab === 'bridal') {
       return publishedProducts.filter((p) => isBridalRobes(p.category));
@@ -69,13 +168,21 @@ export const HomeView: React.FC = () => {
     if (activeTab === 'bridesmaids') {
       return publishedProducts.filter((p) => isBridesmaids(p.category));
     }
+    if (activeTab === 'sets') {
+      return publishedProducts.filter((p) => isBridalPartySets(p.category));
+    }
+    if (activeTab === 'adire') {
+      return publishedProducts.filter((p) => isAdire(p.category));
+    }
+    if (activeTab === 'pyjamas') {
+      return publishedProducts.filter((p) => isPyjamas(p.category));
+    }
+    if (activeTab === 'junior') {
+      return publishedProducts.filter((p) => isJuniorRobes(p.category));
+    }
+    // 'all' tab: Displays every eligible homepage product
     return publishedProducts;
   }, [publishedProducts, activeTab]);
-
-  // Products for promotional Bridal Party Sets section
-  const partySetProducts = useMemo(() => {
-    return publishedProducts.filter((p) => p.category === 'sets');
-  }, [publishedProducts]);
 
   const scrollToSection = (sectionId: string) => {
     const el = document.getElementById(sectionId);
@@ -174,17 +281,16 @@ export const HomeView: React.FC = () => {
             </p>
           </div>
 
-          {/* Category Tabs: [ ALL ] [ BRIDAL ROBES ] [ BRIDESMAIDS ] */}
-          <div className="flex items-center justify-center mb-8 sm:mb-12">
-            <div className="inline-flex flex-wrap items-center justify-center gap-1.5 xs:gap-2 sm:gap-3 p-1 sm:p-1.5 bg-[#F2ECE4]/80 border border-[#E3D9CC] rounded-full max-w-full shadow-2xs">
+          {/* Category Tabs: ALL | BRIDAL ROBES | BRIDESMAIDS | BRIDAL PARTY SETS | ADIRE | PYJAMAS | JUNIOR ROBES */}
+          <div className="flex items-center justify-start lg:justify-center overflow-x-auto scrollbar-none mb-8 sm:mb-12 py-1 max-w-full">
+            <div className="inline-flex items-center gap-1.5 xs:gap-2 sm:gap-2.5 p-1 sm:p-1.5 bg-[#F2ECE4]/80 border border-[#E3D9CC] rounded-full shrink-0 shadow-2xs">
               {tabs.map((tab) => {
                 const isActive = activeTab === tab.id;
                 return (
                   <button
                     key={tab.id}
                     onClick={() => setActiveTab(tab.id)}
-                    style={{ textTransform: 'uppercase' }}
-                    className={`px-4 xs:px-5 sm:px-7 py-2 xs:py-2.5 sm:py-3 text-[10px] xs:text-[11px] sm:text-xs tracking-[0.14em] sm:tracking-[0.18em] font-semibold rounded-full border transition-all duration-300 cursor-pointer whitespace-nowrap ${
+                    className={`px-3.5 xs:px-4 sm:px-5 py-2 xs:py-2.5 sm:py-3 text-[10px] xs:text-[11px] sm:text-xs tracking-[0.12em] sm:tracking-[0.16em] font-semibold rounded-full border transition-all duration-300 cursor-pointer whitespace-nowrap ${
                       isActive
                         ? 'bg-[#181614] text-[#FAF8F5] border-[#181614] shadow-sm'
                         : 'bg-transparent text-[#5A524A] border-transparent hover:text-[#181614] hover:bg-white/60'
@@ -210,7 +316,7 @@ export const HomeView: React.FC = () => {
             <div className="py-16 text-center bg-[#F7F2EB] border border-[#E8DFCF] rounded-2xl max-w-md mx-auto p-8">
               <h3 className="font-serif text-lg text-[#1E1B18]">No pieces currently available</h3>
               <p className="text-xs text-[#78716A] mt-1 font-sans">
-                Please check back soon or browse our other collections.
+                Please check back soon or browse our other categories.
               </p>
             </div>
           ) : (
@@ -222,9 +328,6 @@ export const HomeView: React.FC = () => {
           )}
         </div>
       </section>
-
-      {/* PROMOTIONAL SECTION: BRIDAL PARTY SETS */}
-      <BridalPartySetsSection products={partySetProducts} />
 
       {/* PROMOTIONAL SECTION: PERSONALISED ROBES EMBROIDERY */}
       <PersonalisedRobesFeature />
